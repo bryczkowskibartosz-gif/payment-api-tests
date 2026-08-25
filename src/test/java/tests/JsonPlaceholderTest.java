@@ -1,10 +1,13 @@
 package tests;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.everyItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
+import io.restassured.response.Response;
+
 import static io.restassured.RestAssured.given;
 
 class JsonPlaceholderTest {
@@ -63,5 +66,24 @@ class JsonPlaceholderTest {
                 .get("/posts/999999")
                 .then()
                 .statusCode(404);
+    }
+
+    @Test
+    void shouldUseUserIdFromResponseToFindUsersPosts() {
+        Response response = given()
+                .when()
+                .get("/posts/1");
+        response.then()
+                .statusCode(200);
+
+        int userId = response.jsonPath().getInt("userId");
+
+        given()
+                .queryParam("userId", userId)
+                .when()
+                .get("/posts")
+                .then()
+                .statusCode(200)
+                .body("userId", everyItem(equalTo(userId)));
     }
 }
